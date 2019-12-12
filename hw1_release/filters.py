@@ -8,6 +8,7 @@ Python Version: 3.5+
 """
 
 import numpy as np
+import math
 
 
 def conv_nested(image, kernel):
@@ -24,13 +25,19 @@ def conv_nested(image, kernel):
     Returns:
         out: numpy array of shape (Hi, Wi).
     """
+    kernel = np.flip(np.flip(kernel, 0), 1)
     Hi, Wi = image.shape
     Hk, Wk = kernel.shape
     out = np.zeros((Hi, Wi))
 
     ### YOUR CODE HERE
-    pass
-    ### END YOUR CODE
+    for i in range(Hi):
+        for j in range(Wi):
+            if i < Hk // 2 or i >= (Hi - Hk// 2)  or j < Wk // 2 or j >= (Wi - Wk// 2) :
+                continue
+            out[i, j] = np.sum(np.multiply(kernel, image[i - Hk // 2:i + 1 + Hk // 2, j - Wk // 2: j + 1 + Wk // 2]))
+
+            ### END YOUR CODE
 
     return out
 
@@ -56,7 +63,8 @@ def zero_pad(image, pad_height, pad_width):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = np.concatenate((np.zeros((H, pad_width)), image, np.zeros((H, pad_width))), axis=1)
+    out = np.concatenate((np.zeros((pad_height, W+pad_width*2)), out, np.zeros((pad_height, W+pad_width*2))))
     ### END YOUR CODE
     return out
 
@@ -123,9 +131,18 @@ def cross_correlation(f, g):
     """
 
     out = None
+    Hi, Wi = f.shape
+    Hk, Wk = g.shape
+#     print(g.shape)
+    out = np.zeros((Hi, Wi))
+
     ### YOUR CODE HERE
-    pass
-    ### END YOUR CODE
+    for i in range(Hi):
+        for j in range(Wi):
+            if i < Hk // 2 or i >= (Hi - Hk// 2)  or j < Wk // 2 or j >= (Wi - Wk// 2) :
+                continue
+#             print(i)
+            out[i, j] = np.sum(np.multiply(g, f[i - Hk // 2:i + Hk // 2, j - Wk // 2: j + 1 + Wk // 2]))
 
     return out
 
@@ -146,8 +163,9 @@ def zero_mean_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
+    g = g - np.mean(g)
+    out = cross_correlation(f,g)
     pass
-    ### END YOUR CODE
 
     return out
 
@@ -170,7 +188,21 @@ def normalized_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    g = (g - np.mean(g)) / np.std(g)
+    Hi, Wi = f.shape
+    Hk, Wk = g.shape
+#     print(g.shape)
+    out = np.zeros((Hi, Wi))
+
+    ### YOUR CODE HERE
+    for i in range(Hi):
+        for j in range(Wi):
+            if i < Hk // 2 or i >= (Hi - Hk// 2)  or j < Wk // 2 or j >= (Wi - Wk// 2) :
+                continue
+#             print(i)
+            patch = f[i - Hk // 2:i + Hk // 2, j - Wk // 2: j + 1 + Wk // 2]
+            patch = (patch - np.mean(patch)) / np.std(patch)
+            out[i, j] = np.sum(np.multiply(g, patch))
     ### END YOUR CODE
 
     return out

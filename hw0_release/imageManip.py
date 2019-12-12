@@ -20,7 +20,7 @@ def load(image_path):
 
     ### YOUR CODE HERE
     # Use skimage io.imread
-    pass
+    out = io.imread(image_path)
     ### END YOUR CODE
 
     # Let's convert the image to be between the correct range.
@@ -45,7 +45,7 @@ def dim_image(image):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = image * image * 0.5
     ### END YOUR CODE
 
     return out
@@ -66,7 +66,7 @@ def convert_to_grey_scale(image):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = color.rgb2gray(image)
     ### END YOUR CODE
 
     return out
@@ -86,7 +86,9 @@ def rgb_exclusion(image, channel):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    idx = 0 if channel == 'R' else (1 if channel == 'G' else 2)
+    out = image.copy()
+    out[..., idx] = 0 
     ### END YOUR CODE
 
     return out
@@ -104,10 +106,11 @@ def lab_decomposition(image, channel):
     """
 
     lab = color.rgb2lab(image)
-    out = None
+    out = lab.copy()
 
     ### YOUR CODE HERE
-    pass
+    idx = [1,2] if channel == 'L' else ([0,2] if channel == 'A' else [0,1])
+    out[...,idx] = 0
     ### END YOUR CODE
 
     return out
@@ -125,10 +128,11 @@ def hsv_decomposition(image, channel='H'):
     """
 
     hsv = color.rgb2hsv(image)
-    out = None
+    out = hsv.copy()
 
     ### YOUR CODE HERE
-    pass
+    idx = [1,2] if channel == 'H' else ([0,2] if channel == 'S' else [0,1])
+    out[...,idx] = 0
     ### END YOUR CODE
 
     return out
@@ -153,8 +157,10 @@ def mix_images(image1, image2, channel1, channel2):
     """
 
     out = None
+    image1 = rgb_exclusion(image1, channel1)
+    image2 = rgb_exclusion(image2, channel2)
     ### YOUR CODE HERE
-    pass
+    out = np.concatenate((image1[:, :image1.shape[1]//2,:],image2[:, image2.shape[1]//2:,:]), axis=1)
     ### END YOUR CODE
 
     return out
@@ -181,9 +187,20 @@ def mix_quadrants(image):
         out: numpy array of shape(image_height, image_width, 3).
     """
     out = None
+    tl = image[:image.shape[0]//2, :image.shape[1]//2,:]
+    tr = image[:image.shape[0]//2, image.shape[1]//2:,:]
+    bl = image[image.shape[0]//2:, :image.shape[1]//2,:]
+    br = image[image.shape[0]//2:, image.shape[1]//2:,:]
 
     ### YOUR CODE HERE
-    pass
+    tl = rgb_exclusion(tl, 'R')
+    tr = dim_image(tr)
+    bl = bl ** 0.5
+    br = rgb_exclusion(br, 'R')
+    
+    t = np.concatenate((tl, tr), axis=1)
+    b = np.concatenate((bl, br), axis=1)
+    out = np.concatenate((t,b))
     ### END YOUR CODE
 
     return out
