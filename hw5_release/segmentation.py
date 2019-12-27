@@ -45,7 +45,21 @@ def kmeans(features, k, num_iters=100):
 
     for n in range(num_iters):
         ### YOUR CODE HERE
-        pass
+#         print(n, centers)
+        
+        res = (features[...,None] - centers[..., None].T)
+        dist = np.linalg.norm(res, axis=1)
+#         print(np.argmax(dist, axis=1).shape, dist.shape)
+        new_as = np.argmin(dist, axis=1)
+        if np.all(new_as == assignments): break
+            
+        assignments = new_as
+        for i in range(k):
+            cluster_i = features[assignments==i]
+            
+            centers[i] = np.mean(cluster_i, axis=0)
+#         print(n, centers)
+        
         ### END YOUR CODE
 
     return assignments
@@ -81,8 +95,23 @@ def kmeans_fast(features, k, num_iters=100):
 
     for n in range(num_iters):
         ### YOUR CODE HERE
-        pass
+#         print(n, centers)
+        
+        res = (features[...,None] - centers[..., None].T)
+        dist = np.linalg.norm(res, axis=1)
+#         print(np.argmax(dist, axis=1).shape, dist.shape)
+        new_as = np.argmin(dist, axis=1)
+        if np.all(new_as == assignments): break
+            
+        assignments = new_as
+        for i in range(k):
+            cluster_i = features[assignments==i]
+            
+            centers[i] = np.mean(cluster_i, axis=0)
+#         print(n, centers)
+        
         ### END YOUR CODE
+
 
     return assignments
 
@@ -133,8 +162,24 @@ def hierarchical_clustering(features, k):
 
     while n_clusters > k:
         ### YOUR CODE HERE
-        pass
+        res = (centers[...,None] - centers[..., None].T)
+        dist = np.linalg.norm(res, axis=1)
+        np.fill_diagonal(dist, 2)
+#         print(np.argmax(dist, axis=1).shape, dist.shape)
+        
+        c1, c2 = np.unravel_index(np.nanargmin(dist), dist.shape)
+        assignments[assignments == c2] = c1
+#         print(c1, c2, dist[c1, c2])
+            
+        n_clusters -= 1
+        for i in range(N):
+            cluster_i = features[assignments==i]
+#             print(np.sum(assignments==i))
+            centers[i] = np.mean(cluster_i, axis=0)
+
         ### END YOUR CODE
+    for i, un in enumerate(np.unique(assignments)):
+        assignments[assignments == un] = i
 
     return assignments
 
@@ -154,7 +199,7 @@ def color_features(img):
     features = np.zeros((H*W, C))
 
     ### YOUR CODE HERE
-    pass
+    features = img.reshape(-1, C)
     ### END YOUR CODE
 
     return features
@@ -183,7 +228,10 @@ def color_position_features(img):
     features = np.zeros((H*W, C+2))
 
     ### YOUR CODE HERE
-    pass
+    features[:, :C] = img.reshape(-1, C)
+    print( np.tile(np.arange(W), ( H, 1)), np.tile(np.arange(H)[None, ...].T, (1, W)))
+    features[:, -2] = np.tile(np.arange(W), ( H, 1)).flatten()
+    features[:, -1] = np.tile(np.arange(H)[None, ...].T, (1, W)).flatten()
     ### END YOUR CODE
 
     return features
@@ -223,10 +271,13 @@ def compute_accuracy(mask_gt, mask):
 
     accuracy = None
     ### YOUR CODE HERE
-    pass
+    acc = []
+#     print(mask_gt[mask_gt == 0].shape, mask_gt.shape)
+    for un in np.unique(mask_gt): 
+        acc.append(np.sum(np.multiply(mask_gt == un, mask == un)))
     ### END YOUR CODE
 
-    return accuracy
+    return sum(acc) / (mask_gt.shape[0] * mask_gt.shape[1]) 
 
 def evaluate_segmentation(mask_gt, segments):
     """ Compare the estimated segmentation with the ground truth.
