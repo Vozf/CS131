@@ -1,5 +1,6 @@
 import numpy as np
-
+from scipy.spatial.distance import pdist
+from scipy import stats
 
 def compute_distances(X1, X2):
     """Compute the L2 distance between each point in X1 and each point in X2.
@@ -27,7 +28,7 @@ def compute_distances(X1, X2):
     #
     # HINT: Try to formulate the l2 distance using matrix multiplication
 
-    pass
+    dists = np.sqrt(((X1[:, :, None] - X2[:, :, None].T) ** 2).sum(1))
     # END YOUR CODE
 
     assert dists.shape == (M, N), "dists should have shape (M, N), got %s" % dists.shape
@@ -54,6 +55,8 @@ def predict_labels(dists, y_train, k=1):
         # A list of length k storing the labels of the k nearest neighbors to
         # the ith test point.
         closest_y = []
+        idxes = np.argpartition(dists[i], k)[:k]
+        y_pred[i] = stats.mode(y_train[idxes])[0]
         # Use the distance matrix to find the k nearest neighbors of the ith
         # testing point, and use self.y_train to find the labels of these
         # neighbors. Store these labels in closest_y.
@@ -111,7 +114,14 @@ def split_folds(X_train, y_train, num_folds):
 
     # YOUR CODE HERE
     # Hint: You can use the numpy array_split function.
-    pass
+    X_split = np.array_split(X_train, num_folds)
+    y_split = np.array_split(y_train, num_folds)
+    for i in range(num_folds):
+        X_trains[i] = np.delete(X_split, i, axis=0).reshape(-1, X_train.shape[-1])
+        y_trains[i] = np.delete(y_split, i, axis=0).reshape(-1)
+        
+        X_vals[i] = X_split[i]
+        y_vals[i] = y_split[i]
     # END YOUR CODE
 
     return X_trains, y_trains, X_vals, y_vals
